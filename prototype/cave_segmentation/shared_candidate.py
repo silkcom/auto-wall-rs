@@ -26,7 +26,7 @@ def train(config,model,out):
 
 def infer(image,model,out):
  start=time.perf_counter();im=cv2.imread(image);f=candidate.features(im);forest=cv2.ml.RTrees_load(model);p=probability(forest,f);small=cv2.resize(im,(p.shape[1],p.shape[0]),interpolation=cv2.INTER_AREA);mask,detail=icm(p,small)
- report={'seconds':time.perf_counter()-start,'variant':'shared-model-four-pass-icm','model_sha256':sha(model),'inference_inputs':['image pixels','one shared random forest model'],'reference_read':False,'pseudo_labels_read':False,'scale':candidate.SCALE,'validation':'Training-map reproduction, not independent-map evaluation.',**detail};save(im,mask,p,out,report)
+ report={'seconds':time.perf_counter()-start,'variant':'shared-model-four-pass-icm','model_sha256':sha(model),'inference_inputs':['image pixels','one shared random forest model'],'reference_read':False,'pseudo_labels_read':False,'scale':candidate.SCALE,'validation':'Image-only inference; training/test role must be recorded by the experiment.',**detail};save(im,mask,p,out,report)
 if __name__=='__main__':
  p=argparse.ArgumentParser();p.add_argument('mode',choices=['train','infer']);p.add_argument('input');p.add_argument('model');p.add_argument('out');a=p.parse_args()
  if a.mode=='train':train(a.input,a.model,a.out)

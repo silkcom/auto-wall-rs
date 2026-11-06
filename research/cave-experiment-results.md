@@ -71,3 +71,15 @@ Fixed-unary semantic ICM ablation does not solve perception: canonical P41.49/R3
 Conservative paired-wall-gap door probe:0proposals for8Buildingreferenceportals;1unmatchedTavernproposal for12portals, visually a chair. Reject. Current binary cave contours do not provide door semantics or movable portal identity. Need semantic door proposals anchored to structural walls; closed doors cannot be inferred only from gaps.
 
 The review now includes4map cases and explicitly labels each candidate: localCV, localML(no paid vision call), paid vision labels+local processing, or reused paid labels(no additional call). Shared-model candidates identify their training-map limitation. No additional paid label task was needed for this shared-model/door/solver batch; research/development AI usage is outside the per-map label cost table.
+
+## Organic/building split and full-resolution Conyberry test
+
+User now prefers Shared model+ICM on ALLthree caves; review defaults reflect that. Treat it as the organic specialist. A separate building specialist is a sensible hypothesis because structural building LOS is a thin/open centerline graph with portal spans, not a floor/solid-region perimeter. Mixed scenes may ultimately need both specialists locally rather than whole-image routing.
+
+Explicit building contract: emit ONEline midway between the two visible wall faces. Intersections join centerlines. Door spans attach to this graph, and permanent wall edges must be removed across openings. This geometry stage does not repair missed wall perception; no usable building centerline exporter is established yet.
+
+Located the full Conyberry source4054×2846; its .thumb counterpart is only a200×200crop. Both experiments use the full source and exclude it from training. No Conyberry reference geometry or training annotations were used. Organic inference5.80s,99.67%open, misses buildings. New dedicated3class buildingRF trained only on the prior Building/Tavern labels, with23appearance+8directional features, also fails blind Conyberry: most walls missed, portal false positives on terrain. Inference6.00s. These are qualitative failures, not numeric accuracy scores.
+
+The building-classifier preview is shown as a failed raster overlay in the review, explicitly NOT UVTT walls/doors. No centerlines were fabricated from unreliable predictions. Green=predictedwallband;magenta=predictedportalband on that preview, with no reference overlay. Existing gap probe emits0Conyberryproposals. All these inference paths are local and require no paid vision calls; development agent usage is separate.
+
+Representing wall/portal classes is feasible; generalization from two maps remains inadequate. Potential causes include art style, apparent building scale, resolution and annotation-to-material mismatch; no ablation establishes which dominates. Need broader building supervision and per-building/native-resolution evaluation before tuning a final model or promising reliable doors.
