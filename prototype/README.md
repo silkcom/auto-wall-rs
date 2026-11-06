@@ -36,3 +36,7 @@ Upstream detector imports run without GUI/manual refinement or its full exporter
 ## Current milestone
 
 Auto-Wall parity first: see [PARITY.md](PARITY.md). Full automatic-path captures and a stage comparator now provide the baseline for a faithful Rust port. The old candidate modes are retained only for historical comparison. To attach local full-path captures to the review page, run `python3 prototype/add_parity_review.py` after producing them under `/private/tmp/auto-wall-parity/`.
+
+## AI annotation comparison
+
+See [AI-EXPERIMENT.md](AI-EXPERIMENT.md) for the four-pass visual wall exercise and local rebuild instructions. This remains separate from the Rust parity work.
