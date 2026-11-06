@@ -44,3 +44,7 @@ See [AI-EXPERIMENT.md](AI-EXPERIMENT.md) for the four-pass visual wall exercise 
 ## Fresh-context revision and token measurement
 
 See [AI-V2.md](AI-V2.md) for the second AI annotation experiment, doors/lights, interactive sight checks, and measured per-map accounting. Private geometry and session records remain local.
+
+## One-pass cavern correction
+
+See [CAVERN-SINGLE-PASS.md](CAVERN-SINGLE-PASS.md) for the isolated one-pass experiment, failed visual placement acceptance, and measured supplied-rate cost report.
