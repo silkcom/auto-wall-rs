@@ -1,20 +1,27 @@
 <!doctype html><meta charset="utf-8"><title>Dungeon detection experiment</title>
 <style>body{font:16px system-ui;background:#15191d;color:#e9edf0;margin:24px auto;max-width:1250px;padding:0 20px}h1{font-size:26px}p{line-height:1.5;max-width:1000px}button,select{font:inherit;padding:8px;margin:4px;background:#29343e;color:white;border:1px solid #627586;border-radius:5px}label{display:inline-block;margin:8px}canvas{width:100%;background:#080a0c;margin-top:12px}#stats{padding:14px;background:#222b33;line-height:1.8}small{color:#b9c5ce}.active{outline:2px solid #5de1b1}</style>
 <h1>Dungeon walls: AI guesses and detector comparisons</h1>
-<p>Throwaway experiment: compare image-only candidates on your maps. Green is detection; magenta is existing UVTT geometry. The AI visual guess was inspected over four passes with a preference for few walls. Toggle the magenta UVTT reference to compare. Existing annotations are unreviewed references, not verified truth.</p>
+<p>Throwaway experiment: compare image-only candidates on your maps. Green is detection; magenta is existing UVTT geometry. AI v2 uses fresh map-specific contexts, prioritizes sight barriers, and adds doors and lights. The earlier four-pass wall-only guess is retained for comparison. Toggle the magenta UVTT reference to compare. Existing annotations are unreviewed references, not verified truth.</p>
 <div id="maps"></div><div id="modes"></div>
-<label><input id="det" type="checkbox" checked> Detected walls (green)</label><label><input id="ref" type="checkbox"> Existing walls (magenta)</label><label><input id="obj" type="checkbox"> Existing object blockers (orange)</label><label><input id="lights" type="checkbox"> Lights (green detected / magenta existing)</label><label><input id="probes" type="checkbox"> Visibility differences / AI spot checks</label>
+<label><input id="det" type="checkbox" checked> Detected walls (green)</label><label><input id="ref" type="checkbox"> Existing walls (magenta)</label><label><input id="obj" type="checkbox"> Existing object blockers (orange)</label><label><input id="lights" type="checkbox" checked> Light sources</label><label><input id="probes" type="checkbox"> Visibility differences / AI spot checks</label>
+<label><input id="refLights" type="checkbox"> Existing lights (magenta)</label>
 <div><button id="detOnly">Detection only</button><button id="compare">Compare reference</button><button id="sight">Inspect visibility differences</button></div>
-<div id="stats"></div><canvas id="view"></canvas><p><small id="hardware"></small></p>
+<label><input id="doors" type="checkbox" checked> Doors (cyan)</label><label><input id="doorsClosed" type="checkbox" checked> Doors closed</label><label><input id="sightTest" type="checkbox"> AI draft: click map to test sight</label>
+<div id="stats"></div><details id="annotationNotes"><summary>Annotation notes and uncertainties</summary><p id="notes"></p></details><div id="tokenSummary"></div><canvas id="view"></canvas><p><small id="hardware"></small></p>
 <script>
-const data=/*PAYLOAD*/; let state={map:1,mode:data.cases[1].results.length-1};const $=id=>document.getElementById(id),canvas=$('view'),ctx=canvas.getContext('2d');
-function select(map,mode){state={map,mode};render()}
+const data=/*PAYLOAD*/; let state={map:2,mode:data.cases[2].results.length-1,eye:null};const $=id=>document.getElementById(id),canvas=$('view'),ctx=canvas.getContext('2d');
+function select(map,mode){state={map,mode,eye:map===state.map?state.eye:null};render()}
 data.cases.forEach((c,i)=>{let b=document.createElement('button');b.textContent=c.name;b.onclick=()=>select(i,state.mode);$('maps').append(b)});
-const labels={dark40:'Dark regions: threshold 40',dark70:'Dark regions: threshold 70',edges:'Edge contours',void:'Large near-black regions','upstream-core':'Upstream core defaults','upstream-gui':'Upstream GUI detector settings','full-startup':'Full Auto-Wall: startup','full-default':'Full Auto-Wall: Default preset','ai-guess':'AI visual guess · 4 passes'};
+const labels={dark40:'Dark regions: threshold 40',dark70:'Dark regions: threshold 70',edges:'Edge contours',void:'Large near-black regions','upstream-core':'Upstream core defaults','upstream-gui':'Upstream GUI detector settings','full-startup':'Full Auto-Wall: startup','full-default':'Full Auto-Wall: Default preset','ai-guess':'AI visual guess · 4 passes','ai-v2':'AI v2 · fresh context · walls/doors/lights'};
 data.cases[0].results.forEach((r,i)=>{let b=document.createElement('button');b.textContent=labels[r.mode]||r.mode;b.onclick=()=>select(state.map,i);$('modes').append(b)});
 function render(){const c=data.cases[state.map],r=c.results[state.mode];[...$('maps').children].forEach((b,i)=>b.classList.toggle('active',i===state.map));[...$('modes').children].forEach((b,i)=>b.classList.toggle('active',i===state.mode));
 const pct=x=>x===null?'n/a':(100*x).toFixed(1)+'%';
-if(r.mode==='ai-guess'){
+$('annotationNotes').hidden=!r.notes?.length;$('notes').textContent=(r.notes||[]).join(' ');$('tokenSummary').textContent='';
+if(r.mode==='ai-v2'){
+$('stats').textContent=`${c.name} · ${r.walls.length} wall segments · ${r.portals.length} doors · ${r.lights.length} light sources · ${r.iterations} visual rounds. Quality and sight barriers take priority over segment count. Turn on the sight test and click the map; toggle Doors closed to check portals. Light range/intensity are estimates.`;
+$('hardware').textContent='Fresh-context AI-assisted visual annotation with geometry tooling. Supplied UVTT wall coordinates were not copied; the cavern agent received the feedback screenshot. This is an iterative agent experiment, not a one-shot inference benchmark.';
+if(r.token_usage){const u=r.token_usage;$('tokenSummary').textContent=`Measured map-agent tokens: ${u.total_tokens.toLocaleString()} total (${u.cached_input_tokens.toLocaleString()} cached input; ${u.uncached_input_tokens.toLocaleString()} uncached input; ${u.output_tokens.toLocaleString()} output). Includes prompts, images, tool interactions and repeated context. Coordinator overhead is separate.`;}
+}else if(r.mode==='ai-guess'){
 $('stats').textContent=`${c.name} · ${r.walls.length} wall segments · AI visual guess, four refinement passes. ${r.review_checks.filter(q=>q.pass).length}/${r.review_checks.length} image-selected visibility spot checks passed. Prioritize long walls and major barriers; omit furniture and small contour detail. Closed doors/windows are treated as barriers; obvious open arches remain open. Walls only: no lights or movable portals inferred. These checks are illustrative, not a measured accuracy score.`;
 $('hardware').textContent='One-off AI-assisted annotation using visual inspection and geometry tooling, including initial cavern mask tracing. Not an autonomous detector or blind benchmark; earlier conversation included reference overlays. Inference cost, latency and generalization have not been measured.';
 }else{
@@ -22,12 +29,20 @@ $('stats').textContent=`${c.name} · ${r.original.join(' × ')} original → ${r
 $('hardware').textContent=`${data.metadata.cpu}; ${data.metadata.platform}; ${data.metadata.rustc}. RSS includes decoding. Fresh processes with warm filesystem cache; no tail latency or concurrency claim. No automatic doors in this experiment. Current backend: ${(r.mode.startsWith("upstream-") || r.mode.startsWith("full-")) ? "Python/OpenCV (one OpenCV thread)" : "native Rust"}.`;
 }
 const im=new Image();im.onload=()=>{canvas.width=im.width;canvas.height=im.height;ctx.drawImage(im,0,0);const sx=im.width/r.original[0],sy=im.height/r.original[1];
+if($('sightTest').checked && state.eye && r.annotation_only){const blockers=[...r.walls,...($('doorsClosed').checked?(r.portals||[]).filter(p=>p.closed!==false).map(p=>p.bounds.map(q=>[q.x,q.y])):[])];const polygon=visibilityPolygon(state.eye,blockers,r.original);ctx.fillStyle="rgba(255,225,65,.30)";ctx.beginPath();polygon.forEach((p,i)=>i?ctx.lineTo(p[0]*sx,p[1]*sy):ctx.moveTo(p[0]*sx,p[1]*sy));ctx.closePath();ctx.fill();ctx.fillStyle="white";ctx.beginPath();ctx.arc(state.eye[0]*sx,state.eye[1]*sy,4,0,Math.PI*2);ctx.fill();}
 function line(a,b,color,width=1.5){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(a[0]*sx,a[1]*sy);ctx.lineTo(b[0]*sx,b[1]*sy);ctx.stroke()}
 if($('ref').checked)c.reference.forEach(([a,b])=>line(a,b,'#ff49cf',2));if($('obj').checked)c.objects.forEach(([a,b])=>line(a,b,'#ffa93c'));if($('det').checked)r.walls.forEach(([a,b])=>line(a,b,'#39ff9d'));
-if($('lights').checked){for(const [points,color]of [[c.reference_lights,'#ff49cf'],[r.lights,'#39ff9d']]){ctx.strokeStyle=color;ctx.lineWidth=2;for(const [x,y]of points){ctx.beginPath();ctx.arc(x*sx,y*sy,6,0,Math.PI*2);ctx.stroke()}}}
+if($('doors').checked)for(const p of r.portals||[]){ctx.setLineDash($('doorsClosed').checked&&p.closed!==false?[]:[5,4]);line([p.bounds[0].x,p.bounds[0].y],[p.bounds[1].x,p.bounds[1].y],'#35eaff',3);ctx.setLineDash([]);}
+if($('lights').checked||$('refLights').checked){for(const [points,color]of [[$('refLights').checked?c.reference_lights:[],'#ff49cf'],[$('lights').checked?r.lights:[],r.mode==='ai-v2'?'#ffe65e':'#39ff9d']]){ctx.strokeStyle=color;ctx.lineWidth=2;for(const [x,y]of points){ctx.beginPath();ctx.arc(x*sx,y*sy,6,0,Math.PI*2);ctx.stroke()}}}
 if($('probes').checked && r.mode==='ai-guess')r.review_checks.forEach(q=>line(q.a,q.b,q.expected_blocked?'#ffad65':'#55dfff',2));
 if($('probes').checked)r.probes.filter(p=>p.reference_blocked!==p.detected_blocked).forEach(p=>line(p.a,p.b,'#ff3737',2));};im.src=c.thumbnail;}
-for(const id of ['det','ref','obj','lights','probes'])$(id).onchange=render;
+for(const id of ['det','ref','obj','lights','probes','doors','doorsClosed','sightTest','refLights'])$(id).onchange=render;
+function visibilityPolygon(eye,walls,dimensions){
+const [w,h]=dimensions,edges=[...walls,[[0,0],[w,0]],[[w,0],[w,h]],[[w,h],[0,h]],[[0,h],[0,0]]];
+const angles=[];for(const line of edges)for(const p of line){const a=Math.atan2(p[1]-eye[1],p[0]-eye[0]);angles.push(a-1e-6,a,a+1e-6)}
+return angles.sort((a,b)=>a-b).map(angle=>{const dx=Math.cos(angle),dy=Math.sin(angle);let closest=Infinity;for(const [a,b]of edges){const sx=b[0]-a[0],sy=b[1]-a[1],qx=a[0]-eye[0],qy=a[1]-eye[1],den=dx*sy-dy*sx;if(Math.abs(den)<1e-12)continue;const t=(qx*sy-qy*sx)/den,u=(qx*dy-qy*dx)/den;if(t>=0&&u>=0&&u<=1&&t<closest)closest=t;}return[eye[0]+closest*dx,eye[1]+closest*dy]});
+}
+canvas.onclick=e=>{const r=data.cases[state.map].results[state.mode];if(!$('sightTest').checked||!r.annotation_only)return;const box=canvas.getBoundingClientRect();state.eye=[(e.clientX-box.left)/box.width*r.original[0],(e.clientY-box.top)/box.height*r.original[1]];render()};
 function controls(values){for(const [id,v]of Object.entries(values))$(id).checked=v;render()}
 $('detOnly').onclick=()=>controls({det:true,ref:false,obj:false,probes:false,lights:data.cases[state.map].results[state.mode].mode!=='ai-guess'});$('compare').onclick=()=>controls({det:true,ref:true,probes:false});$('sight').onclick=()=>controls({det:true,ref:true,probes:true,lights:false});render();
 </script>

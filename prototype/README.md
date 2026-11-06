@@ -40,3 +40,7 @@ Auto-Wall parity first: see [PARITY.md](PARITY.md). Full automatic-path captures
 ## AI annotation comparison
 
 See [AI-EXPERIMENT.md](AI-EXPERIMENT.md) for the four-pass visual wall exercise and local rebuild instructions. This remains separate from the Rust parity work.
+
+## Fresh-context revision and token measurement
+
+See [AI-V2.md](AI-V2.md) for the second AI annotation experiment, doors/lights, interactive sight checks, and measured per-map accounting. Private geometry and session records remain local.
