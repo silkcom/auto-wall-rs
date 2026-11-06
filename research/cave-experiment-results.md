@@ -49,3 +49,13 @@ These cover isolated label-agent tasks, including repeated context. They exclude
 ## Next evidence needed
 
 The quality bottleneck is semantic boundary identification across map styles. A representative, legally usable paired training/validation corpus and map-level splits are more informative than further freehand coordinate passes or one-map model fitting. Preserve the original Auto-Wall parity experiment as a baseline, while investigating the user's newer reusable-algorithm objective.
+
+## User review follow-up
+
+User selected unseen textured cave Semantic round2 as clearly best. Keep it as the preferred visual baseline; round3 is a regression, not a successor. Preferred methods now initialize per map, with an optional map-index URL query for direct review.
+
+Four topology-preserving local passes changed1,590 quarter-resolution pixels (about0.2% of map), kept every seed and floor/solid component count, and took0.68seconds. Native-ish source crops show small alignment shifts only: missing barriers and furniture blockers remain. This compare-only result is not established better.
+
+A further32 uncertainty/coverage/confidence-audit samples retained round2 labels and added image-only feedback. Global retraining produced gross false room cuts and missing floor; balanced-class retraining partly restored floor but still failed. Reject both outputs and keep round2 unchanged. Class frequency in the audit sample policy is not a true image prior. Future corrections need local scope and explicit preservation checks before promotion.
+
+Additional unseen label task:145,747 input tokens,107,648 cached,38,099 uncached,451output; $0.0914728 at user rates. All four label rounds total$0.2235348, including rejected experiments; preferred round2 alone remains$0.080108. Local cleanup itself used no further vision-label call.

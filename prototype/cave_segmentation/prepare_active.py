@@ -3,7 +3,7 @@ import argparse,json
 from pathlib import Path
 import cv2,numpy as np
 from candidate import SCALE
-p=argparse.ArgumentParser();p.add_argument('directory');a=p.parse_args();out=Path(a.directory);d=json.load(open(out/'samples.json'));im=cv2.imread(d['image']);prob=np.load(out/'result/probability.npy');h,w=prob.shape;rng=np.random.default_rng(321);chosen=[];old=np.array([[s['x']/SCALE,s['y']/SCALE]for s in d['samples']]);
+p=argparse.ArgumentParser();p.add_argument('directory');p.add_argument('--prior');p.add_argument('--probability');p.add_argument('--start-id',type=int,default=49);a=p.parse_args();out=Path(a.directory);out.mkdir(parents=True,exist_ok=True);d=json.load(open(a.prior or out/'samples.json'));im=cv2.imread(d['image']);prob=np.load(a.probability or out/'result/probability.npy');h,w=prob.shape;rng=np.random.default_rng(321);chosen=[];old=np.array([[s['x']/SCALE,s['y']/SCALE]for s in d['samples']]);
 # A 4x4 coverage grid avoids spending every query on the same uncertain boundary.
 for ty in range(4):
  for tx in range(4):
@@ -19,7 +19,8 @@ for ty in range(4):
     used=np.concatenate((old,np.array(chosen).reshape(-1,2)))if chosen else old
     if np.min(np.linalg.norm(used-q,axis=1))>=8:
      chosen.append(q.tolist());break
-records=[{'id':f'P{49+i:02}','x':int((x+.5)*SCALE),'y':int((y+.5)*SCALE),'policy':'uncertainty/coverage/confidence audit'}for i,(x,y)in enumerate(chosen)]
+records=[{'id':f'P{a.start_id+i:02}','x':int((x+.5)*SCALE),'y':int((y+.5)*SCALE),'policy':'uncertainty/coverage/confidence audit'}for i,(x,y)in enumerate(chosen)]
+assert len({(r['x'],r['y']) for r in records})==len(records)
 for page in range(2):
  sheet=np.full((960,640,3),235,np.uint8)
  for j,r in enumerate(records[page*24:(page+1)*24]):
