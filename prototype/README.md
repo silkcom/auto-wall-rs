@@ -48,3 +48,7 @@ See [AI-V2.md](AI-V2.md) for the second AI annotation experiment, doors/lights, 
 ## One-pass cavern correction
 
 See [CAVERN-SINGLE-PASS.md](CAVERN-SINGLE-PASS.md) for the isolated one-pass experiment, failed visual placement acceptance, and measured supplied-rate cost report.
+
+## Iterative cavern alignment
+
+See [CAVERN-ITERATIVE.md](CAVERN-ITERATIVE.md) for native-coordinate diagnostics, ten incremental geometry snapshots, region-aware wall inset, and measured task accounting.
