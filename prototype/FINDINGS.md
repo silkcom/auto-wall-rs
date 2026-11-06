@@ -30,3 +30,17 @@ No candidate meets the intended three-style quality gate. These are exploratory 
 Review local overlays before freezing numeric gates. Recommended next experiment: evaluate user-selected wall-color hints and stronger structural filtering, keeping a default-only result as a separate baseline. Determine whether hints are acceptable on these textured maps, rather than tuning against their supplied UVTT geometry. Automatic lights need a stricter contextual/shape criterion or supported-style policy.
 
 Local review artifact: `/private/tmp/auto-wall-detection-review/review.html`. Generated assets stay local; rerun instructions and detector code are captured on this branch. The prototype ticket stays open pending human review.
+
+## Upstream detector comparison after human rejection of initial quality
+
+Added direct imports of upstream detect_walls and detect_lights at c11b8fa7ad5923d742722a063b3d4385f68527d8. Two settings: the detector function defaults, and initial GUI slider settings (Canny 255/106, blur 5, minimum area 0.1% of working image). Both use the same 1600px cap and fixed 3px polygon simplification as the comparison, not the full GUI/export processing or manual editing. OpenCV 5.0.0.93, NumPy 2.5.4, Python 3.15; OpenCV threads set to one. This is a detector baseline, not exact reproduction of a packaged upstream application.
+
+| Map | Upstream initial GUI settings wall segments | Unreviewed reference coverage | Detection median ms |
+| --- | ---: | ---: | ---: |
+| Building | 45 | 35.8% | 115.4 |
+| Tavern | 187 | 49.2% | 83.9 |
+| Caverns | 298 | 8.1% | 139.4 |
+
+Stronger filtering removes clutter but also misses major interior walls/cavern boundaries. Core defaults retain more reference length but produce 1,893 / 3,888 / 12,121 segments respectively. Brightness-based upstream lights yield 5 / 14 / 12 candidates; reference matches are 5 / 2 / 7, respectively, with reference validity still unreviewed. The controlled warm point is missed by the brightness detector.
+
+Verdict: no accepted candidate. The rejection is about semantics/structure as well as simplification: merely making geometry shorter does not identify the right walls. Next decision is whether to invest in structural/region-aware image-only detection, accept explicit image-derived wall hints, or reconsider an optional learned segmentation backend. No evidence here establishes that threshold tuning alone will meet quality on all three styles.

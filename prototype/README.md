@@ -19,3 +19,16 @@ The local review page switches maps/modes and toggles detected walls, reference/
 Agreement scores are not verified accuracy: thick-wall tracing conventions differ; the tavern uses object geometry; supplied lights may be invisible gameplay sources. Random visibility probes are diagnostics, not human-reviewed acceptance tests. Reference light matching is greedy one-to-one within 0.5 grid; wall agreement samples length within 0.2 grid. Numeric production gates remain pending human review.
 
 Controlled cases: blank image, a simple closed dark room, and a warm point with white clutter. The runner records their raw detections alongside real-map results. These sanity checks are not a representative validation corpus.
+
+## Optional upstream comparison prerequisites
+
+The current runner includes two Python/OpenCV baselines. They are experimental evaluation tools, not dependencies of the planned Rust library. Prepare them before rerunning:
+
+```sh
+git clone https://github.com/ThreeHats/auto-wall.git /private/tmp/auto-wall-upstream-scout
+git -C /private/tmp/auto-wall-upstream-scout checkout c11b8fa7ad5923d742722a063b3d4385f68527d8
+python3 -m venv /private/tmp/auto-wall-upstream-env
+/private/tmp/auto-wall-upstream-env/bin/pip install opencv-python-headless==5.0.0.93 numpy==2.5.4
+```
+
+Upstream detector imports run without GUI/manual refinement or its full exporter. Initial GUI slider settings are not the separate named Default preset. Both upstream comparisons use fixed-pixel simplification to isolate detector differences. See FINDINGS.md for versions and limitations.

@@ -31,7 +31,8 @@ def crosses(a,b,c,d):
 def execute(image,mode,cap=1600):
  samples=[];rss=[];result=None
  for _ in range(3):
-  p=subprocess.run(['/usr/bin/time','-l',str(BIN),str(image),mode,str(cap)],capture_output=True,text=True,check=True)
+  command=['/private/tmp/auto-wall-upstream-env/bin/python',str(ROOT/'upstream.py')] if mode.startswith('upstream-') else [str(BIN)]
+  p=subprocess.run(['/usr/bin/time','-l',*command,str(image),mode,str(cap)],capture_output=True,text=True,check=True)
   result=json.loads(p.stdout);samples.append(result['detect_ms']);m=re.search(r'(\d+)\s+maximum resident set size',p.stderr)
   if m:rss.append(int(m.group(1))/1024**2)
  result['detect_samples_ms']=samples;result['detect_median_ms']=statistics.median(samples);result['peak_rss_mib']=max(rss) if rss else None
@@ -45,7 +46,7 @@ for name,filename in SOURCES:
   return [[[a['x']*g,a['y']*g],[b['x']*g,b['y']*g]] for line in d.get(key,[]) for a,b in zip(line,line[1:])]
  structural=segments('line_of_sight');objects=segments('objects_line_of_sight');reference=structural or objects
  case={'name':name,'source_sha256':hashlib.sha256(raw).hexdigest(),'grid':g,'thumbnail':'data:image/jpeg;base64,'+base64.b64encode(thumb.read_bytes()).decode(),'reference':reference,'objects':objects if structural else [],'reference_kind':'structural' if structural else 'object geometry (unreviewed)','reference_lights':[[l['position']['x']*g,l['position']['y']*g] for l in d.get('lights',[])],'portals':[[[p['x']*g,p['y']*g] for p in door['bounds']] for door in d.get('portals',[])],'results':[]}
- for mode in ['dark40','dark70','edges','void']:
+ for mode in ['dark40','dark70','edges','void','upstream-core','upstream-gui']:
   result=execute(imagepath,mode);walls=result['walls'];tol=.2*g
   result['reference_agreement_precision']=agreement(walls,reference,tol);result['reference_agreement_recall']=agreement(reference,walls,tol)
   rng=random.Random(2026);w,h=result['original'];probes=[]
@@ -76,7 +77,7 @@ for name in ['blank','room','warm-light']:
     if (x-256)**2+(y-256)**2<36:data[(y*w+x)*3:(y*w+x)*3+3]=bytes([255,200,80])
     elif 40<x<80 and 40<y<80:data[(y*w+x)*3:(y*w+x)*3+3]=bytes([255,255,255])
  ppm=OUT/(name+'.ppm');ppm.write_bytes(b'P6\n512 512\n255\n'+data);png=OUT/(name+'.png');subprocess.run(['sips','-s','format','png',str(ppm),'--out',str(png)],check=True,capture_output=True)
- results=[execute(png,m) for m in ['dark40','dark70','edges','void']]
+ results=[execute(png,m) for m in ['dark40','dark70','edges','void','upstream-core','upstream-gui']]
  (OUT/(name+'-results.json')).write_text(json.dumps(results,indent=2))
  print('controlled',name,[(r['mode'],len(r['walls']),len(r['lights'])) for r in results],flush=True)
 metadata={'platform':platform.platform(),'machine':platform.machine(),'cpu':subprocess.check_output(['sysctl','-n','machdep.cpu.brand_string'],text=True).strip(),'rustc':subprocess.check_output(['rustc','--version'],text=True).strip(),'working_cap':1600,'samples_per_candidate':3,'notes':'Fresh processes, warm filesystem cache. No p95 or concurrency claim. RSS includes decoding and detection. Agreement is with unreviewed reference geometry, not ground-truth accuracy.'}
