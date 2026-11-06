@@ -1,3 +1,5 @@
+> Superseded next-step recommendation: the user now requires Auto-Wall parity first. See PARITY.md; no structural/learned redesign is selected.
+
 # Initial detection experiment findings
 
 No candidate meets the intended three-style quality gate. These are exploratory measurements on Apple M4, macOS-27.0-arm64-arm-64bit-Mach-O. Longest working dimension 1600 px; three fresh processes per candidate, warm filesystem cache; no p95/concurrency claim.

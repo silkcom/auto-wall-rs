@@ -32,3 +32,7 @@ python3 -m venv /private/tmp/auto-wall-upstream-env
 ```
 
 Upstream detector imports run without GUI/manual refinement or its full exporter. Initial GUI slider settings are not the separate named Default preset. Both upstream comparisons use fixed-pixel simplification to isolate detector differences. See FINDINGS.md for versions and limitations.
+
+## Current milestone
+
+Auto-Wall parity first: see [PARITY.md](PARITY.md). Full automatic-path captures and a stage comparator now provide the baseline for a faithful Rust port. The old candidate modes are retained only for historical comparison. To attach local full-path captures to the review page, run `python3 prototype/add_parity_review.py` after producing them under `/private/tmp/auto-wall-parity/`.

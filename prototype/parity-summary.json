@@ -1,0 +1,80 @@
+[
+  {
+    "map": "building",
+    "profile": "startup",
+    "walls": 310,
+    "lights": 5,
+    "working": [
+      1500,
+      1137
+    ],
+    "uvtt_sha256": "c158aa73ffe0deb2b91a891ffc0560f62be55ee2f8abeffedd93381c65a256fd",
+    "detection_ms": 180.35479122772813,
+    "export_ms": 314.4754581153393
+  },
+  {
+    "map": "building",
+    "profile": "default",
+    "walls": 1736,
+    "lights": 5,
+    "working": [
+      1500,
+      1137
+    ],
+    "uvtt_sha256": "855597d7f5f997e0aa7f92d6a8225ce0a6a5c28b47d2731d41e92453e587ed5f",
+    "detection_ms": 408.07029232382774,
+    "export_ms": 455.8178326115012
+  },
+  {
+    "map": "tavern",
+    "profile": "startup",
+    "walls": 629,
+    "lights": 13,
+    "working": [
+      1500,
+      1031
+    ],
+    "uvtt_sha256": "f70d36ccfd104af0c2a4e388184dcec6504310d093473efd77546c2130f5ada2",
+    "detection_ms": 118.21687500923872,
+    "export_ms": 312.87391670048237
+  },
+  {
+    "map": "tavern",
+    "profile": "default",
+    "walls": 31,
+    "lights": 13,
+    "working": [
+      1500,
+      1031
+    ],
+    "uvtt_sha256": "36f4d0639868d9fd6809da0dbb7b5b9e80f9f8936d75d9639984c3f2125e7397",
+    "detection_ms": 138.42649990692735,
+    "export_ms": 222.24008291959763
+  },
+  {
+    "map": "caverns",
+    "profile": "startup",
+    "walls": 807,
+    "lights": 7,
+    "working": [
+      1200,
+      1500
+    ],
+    "uvtt_sha256": "a97fef89b937ae6d8626477172006417b7968e88bf1c8e0c1291fa3f43d39775",
+    "detection_ms": 125.63191680237651,
+    "export_ms": 491.4781670086086
+  },
+  {
+    "map": "caverns",
+    "profile": "default",
+    "walls": 759,
+    "lights": 7,
+    "working": [
+      1200,
+      1500
+    ],
+    "uvtt_sha256": "206d11efeb02ebcce6ae59a6e68b2bddaf297344aeadc4059a19dd11c256bf88",
+    "detection_ms": 208.9885836467147,
+    "export_ms": 466.3565829396248
+  }
+]

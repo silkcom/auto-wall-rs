@@ -1,0 +1,80 @@
+{
+  "upstream_commit": "c11b8fa7ad5923d742722a063b3d4385f68527d8",
+  "profile": "black",
+  "lights_enabled": true,
+  "opencv": "4.14.0",
+  "numpy": "2.2.6",
+  "python": "3.12.13",
+  "opencv_threads": 10,
+  "input_bgr_sha256": "0c61b2357721baecd0affe2bbe66921121b2600ffddbd531eeb87bc3b36a85ae",
+  "original_dimensions": [
+    512,
+    512
+  ],
+  "working_dimensions": [
+    512,
+    512
+  ],
+  "scale_factor": 1.0,
+  "working_bgr_sha256": "0c61b2357721baecd0affe2bbe66921121b2600ffddbd531eeb87bc3b36a85ae",
+  "detection_settings": {
+    "Smoothing": 3,
+    "Edge Sensitivity": 50,
+    "Edge Threshold": 150,
+    "Edge Margin": 2,
+    "Min Merge Distance": 10,
+    "Min Area": 500
+  },
+  "export_settings": {
+    "simplify_tolerance": 0.0005,
+    "max_wall_length": 50,
+    "max_walls": 5000,
+    "merge_distance": 25.0,
+    "angle_tolerance": 1.0,
+    "max_gap": 10.0,
+    "grid_size": 0,
+    "allow_half_grid": true,
+    "grid_offset_x": 0.0,
+    "grid_offset_y": 0.0,
+    "overlay_grid_size": 70
+  },
+  "stages": {
+    "detect_walls": {
+      "elapsed_ms": 3.98450018838048,
+      "contours": []
+    },
+    "merge_contours": {
+      "elapsed_ms": 0.11804234236478806,
+      "contours": []
+    },
+    "postprocess": {
+      "contours": [],
+      "lights": []
+    }
+  },
+  "uvtt": {
+    "format": 0.3,
+    "resolution": {
+      "map_origin": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "map_size": {
+        "x": 7.314285714285714,
+        "y": 7.314285714285714
+      },
+      "pixels_per_grid": 70
+    },
+    "line_of_sight": [],
+    "objects_line_of_sight": [],
+    "portals": [],
+    "environment": {
+      "ambient_light": "77a8c8a2"
+    },
+    "lights": []
+  },
+  "uvtt_sha256": "7df45ba597e37d6027a4184938d556a7f71f18a81958e2c226f01a6d4688904c",
+  "embedded_image_sha256": "d19051d5a775df32e4e376c76bba280313835c16049300b4d189adf6fd8750d2",
+  "detection_and_display_ms": 11.809083167463541,
+  "export_with_encoding_ms": 0.6241248920559883
+}
