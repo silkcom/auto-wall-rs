@@ -59,3 +59,15 @@ Four topology-preserving local passes changed1,590 quarter-resolution pixels (ab
 A further32 uncertainty/coverage/confidence-audit samples retained round2 labels and added image-only feedback. Global retraining produced gross false room cuts and missing floor; balanced-class retraining partly restored floor but still failed. Reject both outputs and keep round2 unchanged. Class frequency in the audit sample policy is not a true image prior. Future corrections need local scope and explicit preservation checks before promotion.
 
 Additional unseen label task:145,747 input tokens,107,648 cached,38,099 uncached,451output; $0.0914728 at user rates. All four label rounds total$0.2235348, including rejected experiments; preferred round2 alone remains$0.080108. Local cleanup itself used no further vision-label call.
+
+## Shared foundation and portfolio follow-up
+
+User accepts Frost semanticround1, unseen semanticround2/local cleanup, and canonical Boundary+ICM as closest but artifacty. A portfolio of5–10candidates with user selection is now an acceptable product direction; automatic method ranking is not required to investigate that option. Candidate generation must still be image-only. Share semantic observations and image features across candidates instead of multiplying paid calls.
+
+One shared RF trained across the three development styles (reference labels for canonical/Frost, explicitly accepted AI-mask pseudolabels for textured cave) avoids style collapse with identical4ICMpasses. Canonical P88.25/R85.02at0.2grid,124false-open/56false-blocked; Frost P99.86/R99.77at0.2grid,15false-open/13false-blocked. Textured cave visually reproduces the accepted contours. These are training reproduction scores, not generalization evidence. Canonical remains worse than its preferred specialist. Inference reads only image+model and uses no paid vision call; the model's training includes AI-derived pseudolabels. CPU21.18s canonical,1.95s Frost,17.98s textured on the measured machine.
+
+Fixed-unary semantic ICM ablation does not solve perception: canonical P41.49/R33.82at0.2grid; Frost P98.06/R97.98, worse than accepted GrabCut output. Unseen grows small false contours around bridge/furniture. Preserve current preferences.
+
+Conservative paired-wall-gap door probe:0proposals for8Buildingreferenceportals;1unmatchedTavernproposal for12portals, visually a chair. Reject. Current binary cave contours do not provide door semantics or movable portal identity. Need semantic door proposals anchored to structural walls; closed doors cannot be inferred only from gaps.
+
+The review now includes4map cases and explicitly labels each candidate: localCV, localML(no paid vision call), paid vision labels+local processing, or reused paid labels(no additional call). Shared-model candidates identify their training-map limitation. No additional paid label task was needed for this shared-model/door/solver batch; research/development AI usage is outside the per-map label cost table.
