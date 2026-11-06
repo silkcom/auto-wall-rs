@@ -30,7 +30,7 @@ Frozen model SHA256: `bddb2ae7b1b9a24e699bfdd478b0df8d51e959f2c467a2e5c4170d3ec1
 
 ## Observations against visible source images
 
-Source on the left, predicted green wall bands and magenta portal bands on the right:
+Source on the left, predicted green wall bands and orange portal bands on the right:
 
 - [Building comparison](/private/tmp/auto-wall-building-model/building/comparison.jpg): exterior rectangle and portal gaps are recognizable. This is training reproduction, not independent validation.
 - [Tavern comparison](/private/tmp/auto-wall-building-model/tavern/comparison.jpg): exterior walls, partitions, bar, stair and object LOS boundaries appear; several small object/texture responses remain. Again this is development data.

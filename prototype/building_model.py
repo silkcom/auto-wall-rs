@@ -60,6 +60,14 @@ def train(config, model, out):
     rf.save(str(model)); Path(out).write_text(json.dumps({'sources': sources, 'model_sha256': sha(model), 'classes': ['background', 'wall-band', 'portal-band'], 'features': 31, 'validation': 'Training maps are development only; Conyberry is blind image-only test without ground truth.'}, indent=2))
 
 
+def render_prediction(image, prediction):
+    overlay=image.copy(); large=cv2.resize(prediction,(image.shape[1],image.shape[0]),interpolation=cv2.INTER_NEAREST)
+    # Magenta is reserved for reference geometry in the review.
+    for cls,color in [(1,(0,255,0)),(2,(66,174,255))]:
+        overlay[large==cls]=(overlay[large==cls]*.35+np.array(color)*.65).astype(np.uint8)
+    return overlay
+
+
 def infer(image_path, model, out):
     start=time.perf_counter(); im=cv2.imread(str(image_path)); assert im is not None
     f=features(im); rf=cv2.ml.RTrees_load(str(model)); assert rf.getVarCount()==f.shape[2]
@@ -69,9 +77,7 @@ def infer(image_path, model, out):
     p=np.concatenate(probs).reshape(*f.shape[:2],3)
     # shortcut: thresholded bands are proposals, not centerlines or connected LOS geometry.
     pred=np.argmax(p,axis=2).astype(np.uint8); pred[np.max(p,axis=2)<.55]=0
-    overlay=im.copy(); large=cv2.resize(pred,(im.shape[1],im.shape[0]),interpolation=cv2.INTER_NEAREST)
-    for c,color in [(1,(0,255,0)),(2,(255,0,255))]:
-        overlay[large==c]=(overlay[large==c]*.35+np.array(color)*.65).astype(np.uint8)
+    overlay=render_prediction(im,pred)
     out=Path(out); out.mkdir(parents=True,exist_ok=True)
     cv2.imwrite(str(out/'overlay.jpg'),overlay); cv2.imwrite(str(out/'classes.png'),pred)
     for c in (1,2): cv2.imwrite(str(out/f'probability-{c}.png'),np.rint(p[:,:,c]*255).astype(np.uint8))
@@ -82,6 +88,8 @@ def infer(image_path, model, out):
 
 def selfcheck():
     import tempfile
+    portal=render_prediction(np.zeros((1,1,3),np.uint8),np.full((1,1),2,np.uint8))[0,0]
+    assert portal[2]>portal[1]>portal[0],"Predicted portals must be orange, not reference magenta"
     with tempfile.TemporaryDirectory() as tmp:
         ref=Path(tmp)/'r.json'; ref.write_text(json.dumps({'resolution':{'pixels_per_grid':4},'line_of_sight':[[{'x':2,'y':2},{'x':15,'y':2},{'x':15,'y':15}]],'portals':[{'bounds':[{'x':2,'y':18},{'x':10,'y':18}]}]}))
         y=labels(ref,(24,24)); assert y[10,7]==0 and y[2,8]==1 and y[18,6]==2 and y[10,2]==0
