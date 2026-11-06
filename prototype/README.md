@@ -1,0 +1,21 @@
+# Throwaway detection experiment
+
+Question: can simple CPU-only image processing produce useful simplified walls and conservative lights on the user's three map styles?
+
+This is a disposable comparison, not the final Rust crate or CLI. No automatic doors, calibrated lights, learned model, or ground-truth-assisted detection. Input reference geometry is used only by the evaluator after detection.
+
+```sh
+cargo build --release --manifest-path prototype/Cargo.toml
+python3 prototype/run.py
+open /private/tmp/auto-wall-detection-review/review.html
+```
+
+The runner currently uses macOS `sips`, `/usr/bin/time -l`, and `sysctl` for local evaluation. It expects the three privately supplied UVTT files in Downloads. Neither the files nor their extracted images/geometry are included in this branch. The review HTML embeds thumbnails locally; do not publish it without asset permission.
+
+Candidates: luminance thresholds 40/70, Canny 30/80 with small closing, and a near-black region mask (threshold 25) with radius-3 closing/opening and stronger area/simplification filtering. All cap the long image dimension at 1600 pixels and transform geometry back to original-pixel space. Candidate masks are image-only; grid size is used only to normalize comparison tolerances, not to recover reference walls. The warm-color light heuristic is shared across candidates and intentionally exploratory.
+
+The local review page switches maps/modes and toggles detected walls, reference/object geometry, lights, and random visibility disagreements. Timing covers resize, masks, contours, simplification, and lights; decoding is separate. Process peak RSS includes decoding. Each candidate runs in three fresh processes with warm filesystem cache. These samples are exploratory medians, not a p95, throughput, Linux, or server-capacity claim.
+
+Agreement scores are not verified accuracy: thick-wall tracing conventions differ; the tavern uses object geometry; supplied lights may be invisible gameplay sources. Random visibility probes are diagnostics, not human-reviewed acceptance tests. Reference light matching is greedy one-to-one within 0.5 grid; wall agreement samples length within 0.2 grid. Numeric production gates remain pending human review.
+
+Controlled cases: blank image, a simple closed dark room, and a warm point with white clutter. The runner records their raw detections alongside real-map results. These sanity checks are not a representative validation corpus.
