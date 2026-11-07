@@ -101,3 +101,7 @@ New frozen whole-building-group spatial development split, three local RF varian
 ## User rejection, straightening and transfer check
 
 User rejects all building variants; hard negatives is closest, balanced+portalchecks next. None is accepted. The scale-limited straightening experiment reduces joints but does not improve visibility. A user-supplied different map is evaluated with frozen models/settings and no image-specific tuning: both models miss almost all building walls. No reference metrics are invented. See [building-straightening-transfer.md](building-straightening-transfer.md).
+
+## Structural shape experiment
+
+A grayscale, geometry-first proposal pipeline now tests paired wall faces, corners/enclosures, and true interior texture on both building maps with identical rules. Synthetic closed-fence and rotation failures were corrected. It finds partial outlines on the second map, but Conyberry wall recovery is far worse than hard negatives (47.13%precision/1.62%recall on the spatial development subset). Yellow shape hypotheses are explicitly separate from confirmed blockers. No learned colors, model weights or paid vision calls are used. Details and limits: [building-shape-rules.md](building-shape-rules.md).
