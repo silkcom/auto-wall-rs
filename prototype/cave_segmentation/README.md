@@ -20,3 +20,5 @@ Deterministic inference refinement: close5x5 then open3x3; remove positive compo
 Private development assets live outside this subtree under `/private/tmp/auto-wall-algorithm/`: learned model, train/labels-overlay.jpg, train/training-labels.png, train/heldout-tiles.png, training metrics, result/overlay.jpg, raw and refined masks, walls JSON, runtime/provenance JSON, and blank control. These assets must not be published as generic model validation.
 
 Cost: no network or paid model/API; CPU only. Local timing supports cheap execution, but no hosted dollar estimate is established. This candidate cannot claim the requested ~98% geometry quality. Its purpose is to measure the classical baseline and reveal failures, not hide them with cosmetic fixes.
+
+A user-supplied Bag of Mapping geometry snapshot can be converted for evaluation with `python bag_reference.py snapshot.json map.jpg reference.dd2vtt`. The snapshot needs only mapZoom/mapXOffset/mapYOffset/vttData and optional editor metadata/layer fields. The default base world width is52; only verified zero-offset, unlayered maps are supported. Reference data remains separate from inference and is never committed.
