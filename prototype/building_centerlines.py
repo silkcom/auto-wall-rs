@@ -54,8 +54,10 @@ def paths(mask):
     return result
 
 
-def extract(classes,image_shape):
+def extract(classes,image_shape,straight_grid=None):
     h,w=classes.shape;sy=image_shape[0]/h;sx=image_shape[1]/w
+    epsilon=.5 if straight_grid is None else straight_grid*.12/max(sx,sy)
+    assert epsilon>0 and np.isfinite(epsilon)
     def source(p):return [(float(p[0])+.5)*sx-.5,(float(p[1])+.5)*sy-.5]
     # Keep permanent centerlines out of predicted door spans; proposals remain unverified.
     door=classes==2;wall=(classes==1)&(cv2.dilate(door.astype(np.uint8),np.ones((3,3),np.uint8))==0)
@@ -63,7 +65,7 @@ def extract(classes,image_shape):
     for line in paths(skeleton):
         points=np.asarray([(x,y)for y,x in line],np.float32)
         if len(points)<2:continue
-        closed=np.array_equal(points[0],points[-1]);points=cv2.approxPolyDP(points,.5,closed).reshape(-1,2)
+        closed=np.array_equal(points[0],points[-1]);points=cv2.approxPolyDP(points,epsilon,closed).reshape(-1,2)
         pairs=list(zip(points,points[1:]))
         if closed and len(points)>2:pairs.append((points[-1],points[0]))
         for a,b in pairs:
@@ -90,19 +92,24 @@ def selfcheck():
     # Closed rooms stay connected single rings, rather than two material-edge loops.
     room=np.zeros((40,50),np.uint8);cv2.rectangle(room,(5,5),(44,34),1,5);lines=paths(thin(room));assert len(lines)==1 and lines[0][0]==lines[0][-1]
     empty,_=extract(np.zeros((20,30),np.uint8),(81,121));assert empty=={'walls':[],'portals':[]}
-    print('Centerline wall, doorway, closed-room and blank checks passed')
+    jitter=np.zeros((60,160),np.uint8);points=np.array([(x,20+(i%2)*3)for i,x in enumerate(range(5,155,8))],np.int32);cv2.polylines(jitter,[points],False,1,1)
+    raw,_=extract(jitter,jitter.shape);straight,_=extract(jitter,jitter.shape,49);assert len(straight['walls'])<len(raw['walls'])/2
+    diagonal=np.zeros((100,130),np.uint8);cv2.line(diagonal,(15,15),(110,75),1,5);result,_=extract(diagonal,diagonal.shape,49);assert len(result['walls'])<=3
+    longest=max(result['walls'],key=lambda l:(l[2]-l[0])**2+(l[3]-l[1])**2);v=np.array([longest[2]-longest[0],longest[3]-longest[1]]);target=np.array([95,60]);assert abs(np.dot(v,target))/(np.linalg.norm(v)*np.linalg.norm(target))>np.cos(.06)
+    opened,_=extract(c,c.shape,49);assert all(not(min(l[1],l[3])<20<max(l[1],l[3]))for l in opened['walls'])
+    print('Centerline, doorway, room, blank, straightening and diagonal checks passed')
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('classes',nargs='?');p.add_argument('image',nargs='?');p.add_argument('output',nargs='?');p.add_argument('--selfcheck',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('classes',nargs='?');p.add_argument('image',nargs='?');p.add_argument('output',nargs='?');p.add_argument('--selfcheck',action='store_true');p.add_argument('--straight-grid',type=float);a=p.parse_args()
     if a.selfcheck:selfcheck();return
     assert a.classes and a.image and a.output
     start=time.perf_counter();classes=cv2.imread(a.classes,cv2.IMREAD_GRAYSCALE);im=cv2.imread(a.image);assert classes is not None and im is not None;assert set(np.unique(classes)).issubset({0,1,2})
-    result,skeleton=extract(classes,im.shape);out=Path(a.output);out.mkdir(parents=True,exist_ok=True);(out/'walls.json').write_text(json.dumps(result));cv2.imwrite(str(out/'skeleton.png'),skeleton*255)
+    result,skeleton=extract(classes,im.shape,a.straight_grid);out=Path(a.output);out.mkdir(parents=True,exist_ok=True);(out/'walls.json').write_text(json.dumps(result));cv2.imwrite(str(out/'skeleton.png'),skeleton*255)
     overlay=im.copy()
     for key,color in [('walls',(50,245,60)),('portals',(66,174,255))]:
         for x,y,u,v in result[key]:cv2.line(overlay,(round(x),round(y)),(round(u),round(v)),color,3)
-    cv2.imwrite(str(out/'overlay.jpg'),overlay);report={'seconds':time.perf_counter()-start,'reference_read':False,'inputs':['predicted class raster','source image dimensions'],'centerline_method':'Zhang-Suen thinning and pixel graph tracing','wall_segments':len(result['walls']),'portal_proposals':len(result['portals']),'limitations':'Geometry follows the predicted mask. Portal spans are unverified; missed or false semantic labels remain errors.'};(out/'inference.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
+    cv2.imwrite(str(out/'overlay.jpg'),overlay);report={'seconds':time.perf_counter()-start,'reference_read':False,'inputs':['predicted class raster','source image dimensions'],'centerline_method':'Zhang-Suen thinning and pixel graph tracing','straight_grid_hint':a.straight_grid,'simplification_source_pixels':a.straight_grid*.12 if a.straight_grid else None,'wall_segments':len(result['walls']),'portal_proposals':len(result['portals']),'limitations':'Geometry follows the predicted mask. Portal spans are unverified; missed or false semantic labels remain errors.'};(out/'inference.json').write_text(json.dumps(report,indent=2));print(json.dumps(report))
 
 
 if __name__=='__main__':main()

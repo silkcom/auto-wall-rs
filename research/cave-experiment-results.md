@@ -97,3 +97,7 @@ User identifies fences with grass/gravel on both sides as important nonblocking 
 ## Building continuation
 
 New frozen whole-building-group spatial development split, three local RF variants, single-centerline extraction, portal support checks and separate geometry scoring are documented in [building-centerline-results.md](building-centerline-results.md). Best coverage baseline reaches held-out centerline P66.20/R91.99at0.2grid; highestprecision variant P76.59/R87.35 sacrifices barriers. Held-out structural false-open counts27→57show why higherboundaryF1does not alone establish better visibility. Doors remain unusable. No paid vision calls per map are required for these variants.
+
+## User rejection, straightening and transfer check
+
+User rejects all building variants; hard negatives is closest, balanced+portalchecks next. None is accepted. The scale-limited straightening experiment reduces joints but does not improve visibility. A user-supplied different map is evaluated with frozen models/settings and no image-specific tuning: both models miss almost all building walls. No reference metrics are invented. See [building-straightening-transfer.md](building-straightening-transfer.md).
