@@ -3,7 +3,7 @@ import argparse,hashlib,json,time,collections
 from pathlib import Path
 import cv2,numpy as np
 
-RULES={'working_grid_pixels':32,'working_cap':2800,'unpaired_discovery_length_grid':1.2,'minimum_face_length_grid':.4,'wall_width_grid':[.05,.45],'parallel_degrees':4,'proposal_gap_grid':1.0,'minimum_region_area_grid2':3,'minimum_region_width_grid':.9,'proposal_close_grid':1.5,'minimum_supported_box_sides':3,'minimum_axis_fraction':.65,'minimum_texture_axis_fraction':.55,'interior_inset_grid':.5,'inset_short_side_fraction':.25}
+RULES={'preserve_concave_boundaries':True,'working_grid_pixels':32,'working_cap':2800,'unpaired_discovery_length_grid':1.2,'minimum_face_length_grid':.4,'wall_width_grid':[.05,.45],'parallel_degrees':4,'proposal_gap_grid':1.0,'minimum_region_area_grid2':3,'minimum_region_width_grid':.9,'proposal_close_grid':1.5,'minimum_supported_box_sides':3,'minimum_axis_fraction':.65,'minimum_texture_axis_fraction':.55,'interior_inset_grid':.5,'inset_short_side_fraction':.25}
 
 def dot(a,b):
     a=np.asarray(a);return a[...,0]*b[0]+a[...,1]*b[1]
@@ -29,6 +29,11 @@ def combine(lines,g):
     return result
 
 
+def proposal_polygon(contour,g):
+    # Preserve recessed corners: convex hulls invent walls across L-shaped rooms.
+    return cv2.approxPolyDP(contour,g*.2,True).reshape(-1,2)
+
+
 def detect(image,grid):
     cv2.setRNGSeed(42)
     factor=min(1,32/grid,2800/max(image.shape[:2]));small=cv2.resize(image,None,fx=factor,fy=factor,interpolation=cv2.INTER_AREA);h,w=small.shape[:2];sx=image.shape[1]/w;sy=image.shape[0]/h;g=grid*factor
@@ -52,7 +57,6 @@ def detect(image,grid):
     k=max(3,round(g*1.5)|1);padded=np.pad(barrier,k);padded=cv2.morphologyEx(padded,cv2.MORPH_CLOSE,np.ones((k,k),np.uint8));padded=cv2.morphologyEx(padded,cv2.MORPH_OPEN,np.ones((3,3),np.uint8));barrier=padded[k:-k,k:-k];shape_distance=cv2.distanceTransform(255-discovery,cv2.DIST_L2,cv2.DIST_MASK_PRECISE);contours,hierarchy=cv2.findContours(barrier,cv2.RETR_CCOMP,cv2.CHAIN_APPROX_SIMPLE);boundary=np.zeros_like(barrier);regions=[];rejected=collections.Counter()
     if hierarchy is not None:
         for i,c in enumerate(contours):
-            if hierarchy[0,i,3]<0:c=cv2.convexHull(c)
             area=cv2.contourArea(c)
             if area<3*g*g or area>600*g*g:rejected['area']+=1;continue
             rect=cv2.minAreaRect(c);sizes=sorted(rect[1])
@@ -64,7 +68,7 @@ def detect(image,grid):
                     samples=a+(b-a)*np.linspace(0,1,max(2,round(np.linalg.norm(b-a))))[:,None];xx=np.clip(np.rint(samples[:,0]).astype(int),0,w-1);yy=np.clip(np.rint(samples[:,1]).astype(int),0,h-1)
                     sides+=float(np.mean(shape_distance[yy,xx]<=g*.2))>=.2
                 if sides<3:rejected['unsupported_shape']+=1;continue
-            poly=cv2.approxPolyDP(c,g*.2,True).reshape(-1,2)
+            poly=proposal_polygon(c,g)
             if len(poly)<4 or len(poly)>24:rejected['corners']+=1;continue
             box=cv2.boxPoints(rect);axis=box[1]-box[0];axis=axis/np.linalg.norm(axis);other=np.array([-axis[1],axis[0]]);edge=np.roll(poly,-1,0)-poly;edge_length=np.linalg.norm(edge,axis=1);directions=edge/np.maximum(edge_length[:,None],1e-6);aligned=np.maximum(np.abs(dot(directions,axis)),np.abs(dot(directions,other)))>=np.cos(np.deg2rad(12));axis_fraction=float(edge_length[aligned].sum()/edge_length.sum())
             if axis_fraction<.65:rejected['axes']+=1;continue
@@ -95,6 +99,9 @@ def run(image_path,out,grid):
 
 
 def selfcheck():
+    outline=np.array([[20,20],[180,20],[180,90],[100,90],[100,180],[20,180]],np.int32).reshape(-1,1,2)
+    polygon=proposal_polygon(outline,40)
+    assert abs(cv2.contourArea(polygon)-cv2.contourArea(outline))<1, 'Invented diagonal across recessed corner'
     room=np.full((260,300,3),70,np.uint8);cv2.rectangle(room,(50,40),(250,220),(185,185,185),-1)
     for y in range(52,215,12):cv2.line(room,(55,y),(245,y),(140,140,140),1)
     cv2.rectangle(room,(50,40),(250,220),(15,15,15),10)
@@ -105,7 +112,7 @@ def selfcheck():
     blank=np.full_like(room,70);fence=blank.copy();cv2.line(fence,(30,130),(270,130),(15,15,15),8)
     yard=blank.copy();cv2.rectangle(yard,(50,40),(250,220),(15,15,15),10)
     for image in (blank,fence,yard):assert not detect(image,40)[0]['regions']
-    print('Closed building, contrast inversion, rotation, blank, open/closed fence and repeatability checks passed')
+    print('Concave corner, closed building, contrast inversion, rotation, blank, open/closed fence and repeatability checks passed')
 
 
 if __name__=='__main__':

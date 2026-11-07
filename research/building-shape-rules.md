@@ -51,3 +51,9 @@ python prototype/building_shapes.py --selfcheck
 ```
 
 Checks cover contrast inversion, rotation, deterministic replay, blank input, and open/closed nonblocking-fence examples. All inference is local CV: no learned model, paid vision calls or per-map token charges. Development-agent usage and local CPU are separate from that statement. Images, geometry, diagnostic masks and manifests remain private outside git.
+
+## Follow-up: false diagonal outlines
+
+The outer-contour convex hull discarded recessed corners, creating diagonal hypothesis edges across L-shaped buildings. Removed hull conversion globally; the existing contour simplifier now retains concavities. A minimal L-shaped contour check fails with the former hull conversion and passes without it; existing inversion, rotation, fence and determinism checks still pass.
+
+Both maps were replayed with identical rules. On the second image the top-left and bottom-left building hypotheses now follow the recessed corners instead of spanning them diagonally. The new `Structural shapes · concave corners` option preserves the old result for comparison. It produces 9 hypotheses, 99 supported fragments and 24 unknown openings in 1.67 seconds there. Furniture hypotheses and missing walls remain. Conyberry retains 3 hypotheses, 24 fragments and 11 openings in 35.32 seconds, with unchanged spatial development precision/recall (47.13%/1.62%). This fixes one outline construction error, not building recognition generally; no claim that every false diagonal has been removed.
