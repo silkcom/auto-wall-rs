@@ -50,13 +50,17 @@ def score(candidate,ref,w,h,grid,heldout=None):
   if np.all(a>=0)and np.all(b>=0)and a[0]<w and a[1]<h and b[0]<w and b[1]<h:probes.append((a,b))
  for _ in range(1500):
   a=rng.uniform([0,0],[w,h]);b=np.clip(a+rng.uniform(-2*grid,2*grid,2),[0,0],[w-1,h-1]);probes.append((a,b))
- counts={'reference_blocked':0,'reference_open':0,'false_open':0,'false_blocked':0}
+ counts={'reference_blocked':0,'reference_open':0,'false_open':0,'false_blocked':0};held_counts=dict(counts)if heldout is not None else None
  failures=[]
  for a,b in probes:
   expected=blocked(a,b,ref);actual=blocked(a,b,candidate);counts['reference_blocked'if expected else 'reference_open']+=1
+  if held_counts is not None and np.all(select(np.asarray([a,b]))):
+   held_counts['reference_blocked'if expected else 'reference_open']+=1
+   if expected!=actual:held_counts['false_open'if expected else 'false_blocked']+=1
   if expected!=actual:
    counts['false_open'if expected else 'false_blocked']+=1
    if len(failures)<100:failures.append({'a':a.tolist(),'b':b.tolist(),'reference_blocked':expected,'candidate_blocked':actual})
+ if held_counts is not None:result['spatial_heldout_visibility']=held_counts
  result['visibility']=counts;result['example_visibility_failures']=failures
  return result
 if __name__=='__main__':

@@ -1,0 +1,21 @@
+# Fixed small-context building CNN: negative result
+
+One 29,779-parameter two-pool base-8 U-Net trained for exactly 1,000 steps with batch 4 and 96×96 quarter-resolution crops. Weighted cross entropy (weights 1, 6.67, 19.58) plus wall/portal Dice addressed rare portal labels without literal duplicate resampling. Generic right-angle rotations, reflection, contrast and brightness augmentation were used. Seed 42; Adam 0.001; argmax output; one final checkpoint. No heldout selection, sweep, threshold adjustment or retraining.
+
+Training used the two prior building images and permitted Conyberry labels. Frozen whole-building groups and their split hash were preserved. Conyberry positive loss positions were restricted to the frozen train mask; uncertain shoulders remained ignored. Entire training crops avoided heldout boxes dilated by 208 source pixels. This stronger crop restriction left 131,756 admissible crop origins, covering 8,720 wall and 2,486 portal target pixels. Every selected Conyberry crop was asserted against that restriction. Crop halfwidth is 192 source pixels; the architecture's maximum receptive-field width is 44 low-resolution pixels, with a conservative radius bound of 96 source pixels. Training and heldout inference image support therefore remain separated.
+
+The final model failed to learn useful Conyberry foreground bands. On frozen heldout buildings, wall recall was 0.16% (27 TP, 191 FP, 16,875 FN), wall precision 12.39%; portal recall and precision were both zero (0 TP, 1 FP, 3,780 FN). Training wall recall was also approximately 0.01%, and portal recall zero. This supports an underfit/background-collapse diagnosis for this configuration, not a claim that context cannot help doors. It is not an improvement and should not replace the RF candidate.
+
+Artifacts: `/private/tmp/auto-wall-building-cnn/` contains `model.pt`, `classes.png` (0 background, 1 wall, 2 portal), all three `probability-N.png` channels, `overlay.jpg`, and `provenance.json`. Training took 20.5 seconds on local CPU. Inference accepts only image and checkpoint; a self-check replaced the label reader with a throwing stub, reproduced saved classes, and verified finite normalized probabilities. No reference or region masks are inference inputs.
+
+This is spatial development validation within a shared image/art style, not new-map generalization. Band scores do not measure geometric wall or door accuracy. No additional variant was attempted after observing the failure.
+
+## Authorized sampling correction
+
+The uniform crop policy confounded the original result through scarce foreground exposure. One causal correction was run from a fresh seed-42 initialization with the identical architecture, optimizer, loss weights, augmentation, 1,000 steps, batch size, guards and frozen split. Only sampling changed: admissible crop pools were precomputed using integral class-pixel sums; selection cycled uniform, wall-containing and portal-containing pools, without rejection or fallback. The old checkpoint and outputs remain intact. No heldout checkpoint choice or parameter sweep occurred.
+
+The corrected run used 1,334 uniform, 1,333 wall-containing and 1,333 portal-containing crops. Across 4,000 selected patches, 3,159 contained wall labels and 2,454 contained portal labels; supervised pixel exposures were 31,100,652 background, 1,600,549 wall and 405,831 portal. The strict Conyberry crop coverage remained unchanged.
+
+Wall learning recovered: heldout recall 71.94%, precision 34.44% (12,160 TP, 23,143 FP, 4,742 FN); training recall 81.86%, precision 34.28%. Portal predictions remained absent: 0 TP, 0 FP and 3,780 FN heldout, and no portal predictions on training buildings either. Therefore, this bounded configuration learned walls but did not learn door discrimination despite substantial portal exposure. No training extension or further correction was attempted.
+
+Corrected artifacts are separate at `/private/tmp/auto-wall-building-cnn-sampled/`, including the three probability channels, classes, overlay, model and full provenance. It took 17.3 seconds locally. The image-only inference self-check reproduced the saved classes with the reference reader disabled, and configuration/split equality with the original run was asserted. Both results remain spatial development evidence, not independent-map validation.
